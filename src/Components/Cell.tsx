@@ -7,7 +7,7 @@ interface Props {
 }
 
 const Cell = ({ cell, indexCell }: Props) => {
-  const bgColorCell =
+  const bgColor =
     cell.result === "correct"
       ? "green"
       : cell.result === "present"
@@ -28,7 +28,7 @@ const Cell = ({ cell, indexCell }: Props) => {
           alignItems: "center",
           height: "80px",
           width: "100%",
-          bgcolor: bgColorCell,
+          bgcolor: bgColor,
           borderRadius: "10px",
           border: border,
         }}

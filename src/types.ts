@@ -4,3 +4,4 @@ export interface cellType {
   letter: string;
   result: string;
 }
+

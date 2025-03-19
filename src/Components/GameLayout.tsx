@@ -44,7 +44,7 @@ const GameLayout = ({
           placeItems: "center",
         }}
       >
-        {finishGame && (
+        {finishGame ? (
           <>
             <Typography
               variant="h3"
@@ -64,6 +64,14 @@ const GameLayout = ({
               Elegir otra palabra
             </Button>
           </>
+        ) : (
+          <Typography
+            variant="h3"
+            component={"h1"}
+            sx={{ textAlign: "center", fontWeight: "bold" }}
+          >
+            ADIVINA LA PALABRA
+          </Typography>
         )}
       </Stack>
       <Box marginY={4}>
