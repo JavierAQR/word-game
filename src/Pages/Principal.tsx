@@ -1,26 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { gameType } from "../types";
 import { Button, Container, Stack, Typography } from "@mui/material";
 import Game from "../Components/Game";
-import axios from "axios";
 
 const Principal = () => {
   const [game, setGame] = useState<gameType>(null);
-  const [targetWord, setTargetWord] = useState<string>("");
-
-  useEffect(() => {
-    const fetchRandomWord = async () => {
-      try {
-        const response = await axios.get("src/data/words.json");
-        const words = response.data;
-        const randomWord = words[Math.floor(Math.random() * words.length)];
-        setTargetWord(randomWord);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchRandomWord();
-  }, [game]);
 
   return (
     <>
@@ -50,7 +34,7 @@ const Principal = () => {
           </Stack>
         </Container>
       )}
-      {game === "1player" && <Game setGame={setGame} targetWord={targetWord} />}
+      {game === "1player" && <Game setGame={setGame} />}
     </>
   );
 };

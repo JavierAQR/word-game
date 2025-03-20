@@ -14,12 +14,14 @@ interface Props {
   isCorrect: boolean;
   word: string;
   cells: cellType[];
-  handleFinishGame: () => void;
+  handleGameMode: () => void;
+  handleResetWord: () => void;
   indexCell: number | null;
 }
 
 const GameLayout = ({
-  handleFinishGame,
+  handleGameMode,
+  handleResetWord,
   indexCell,
   finishGame,
   isCorrect,
@@ -60,7 +62,11 @@ const GameLayout = ({
             >
               La palabra era: <b>{word}</b>
             </Typography>
-            <Button variant="contained" sx={{ width: "190px" }}>
+            <Button
+              onClick={handleResetWord}
+              variant="contained"
+              sx={{ width: "190px" }}
+            >
               Elegir otra palabra
             </Button>
           </>
@@ -75,15 +81,20 @@ const GameLayout = ({
         )}
       </Stack>
       <Box marginY={4}>
-        <Grid2 container spacing={1} sx={{ maxWidth: "440px", margin: "auto" }}>
+        <Grid2
+          container
+          component={"ul"}
+          spacing={1}
+          sx={{ maxWidth: "440px", margin: "auto", padding: "0" }}
+        >
           {cells.map((cell, index) => (
-            <Cell key={index} cell={cell} indexCell={index === indexCell} />
+            <Cell key={index} cell={cell} index={index} indexCell={index === indexCell} />
           ))}
         </Grid2>
       </Box>
 
       <Stack>
-        <Button variant="outlined" onClick={handleFinishGame}>
+        <Button variant="outlined" onClick={handleGameMode}>
           Volver al menú
         </Button>
       </Stack>
