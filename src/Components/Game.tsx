@@ -21,23 +21,21 @@ const Game = ({ setGame }: Props) => {
   const [finishGame, setFinishGame] = useState(false);
 
   const arrayCurrentRow = cells.slice(currentRow * 5, (currentRow + 1) * 5); //Se obtiene la fila actual cortando desde el primer indice de la fila, hasta el primero de la siguiente.
-  const lettersCurrentRow = arrayCurrentRow.map((item) => item.letter); //Se obtiene solo las letras de la fila actual
+
   const [indexCell, setIndexCell] = useState<number>(0);
 
   const handleKeyDown = (event: KeyboardEvent) => {
     const key = event.key;
     const firstIndexRow = currentRow * 5;
     const lastIndexRow = (currentRow + 1) * 5 - 1;
-    //Si es una letra
+    const newCells = [...cells];
+
     if (/^[a-zA-Z]$/.test(key) && indexCell !== -1) {
-      //Se obtiene el indice del primer elemento vacío en la fila actual
       if (indexCell <= lastIndexRow) {
-        const newCells = [...cells];
         newCells[indexCell] = {
           ...newCells[indexCell],
           letter: key.toUpperCase(),
         };
-        setCells(newCells);
       }
 
       if (indexCell + 1 <= lastIndexRow) {
@@ -45,22 +43,27 @@ const Game = ({ setGame }: Props) => {
       } else {
         setIndexCell(-1);
       }
+
+      setCells(newCells);
     }
 
     if (key === "Backspace") {
-      const newCells = [...cells];
-
+      if (indexCell === firstIndexRow && newCells[indexCell].letter === "") {
+        return;
+      }
       if (indexCell === -1) {
         setIndexCell(firstIndexRow + 4);
         newCells[firstIndexRow + 4].letter = "";
-        return setCells(newCells);
+        setCells(newCells);
+        return;
       }
 
-      if (newCells[firstIndexRow + indexCell].letter !== "") {
+      if (newCells[indexCell].letter !== "") {
         newCells[indexCell].letter = "";
-      } else if (newCells[firstIndexRow + indexCell].letter === "") {
+      } else {
         newCells[indexCell - 1].letter = "";
       }
+
       setIndexCell((prev) => prev - 1);
       setCells(newCells);
     }
@@ -72,43 +75,44 @@ const Game = ({ setGame }: Props) => {
       arrayCurrentRow.every((cell) => cell.letter !== "") &&
       currentRow <= 5
     ) {
-      const newResult: string[] = Array(5).fill("");
       const wordControl = [...wordArray];
 
-      lettersCurrentRow.forEach((item, index) => {
-        if (item === wordArray[index]) {
-          newResult[index] = "correct";
-          wordControl.splice(wordControl.indexOf(item), 1);
+      arrayCurrentRow.forEach((item, index) => {
+        const cellIndex = firstIndexRow + index;
+        if (item.letter === wordArray[index]) {
+          newCells[cellIndex] = {
+            ...newCells[cellIndex],
+            result: "correct",
+          };
+          wordControl.splice(wordControl.indexOf(item.letter), 1);
         }
       });
 
-      lettersCurrentRow.forEach((item, index) => {
-        if (!(newResult[index] === "")) {
-          return;
-        }
-        if (wordControl.includes(item)) {
-          wordControl.splice(wordControl.indexOf(item), 1);
-          return (newResult[index] = "present");
-        }
-        return (newResult[index] = "absend");
-      });
+      const resultsCurrentRow = newCells.slice(firstIndexRow, lastIndexRow + 1);
 
-      const newCells = [...cells];
-      for (let i = 0; i < 5; i++) {
-        const cellIndex = firstIndexRow + i;
-        newCells[cellIndex] = {
-          ...newCells[cellIndex],
-          result: newResult[i],
-        };
+      if (resultsCurrentRow.every((item) => item.result === "correct")) {
+        setIsCorrect(true);
+      } else {
+        arrayCurrentRow.forEach((item, index) => {
+          const cellIndex = firstIndexRow + index;
+          if (newCells[cellIndex].result === "correct") {
+            return;
+          }
+          if (wordControl.includes(item.letter)) {
+            newCells[cellIndex] = {
+              ...newCells[cellIndex],
+              result: "present",
+            };
+            return wordControl.splice(wordControl.indexOf(item.letter), 1);
+          }
+          newCells[cellIndex] = {
+            ...newCells[cellIndex],
+            result: "absend",
+          };
+        });
       }
+      setCurrentRow((prev) => prev + 1);
       setCells(newCells);
-
-      if (newResult.every((item) => item === "correct")) setIsCorrect(true);
-      else if (currentRow < 5) {
-        setIndexCell((currentRow + 1) * 5);
-        return setCurrentRow(currentRow + 1);
-      }
-      setFinishGame(true);
     }
   };
 
@@ -117,13 +121,21 @@ const Game = ({ setGame }: Props) => {
   };
 
   const handleResetWord = () => {
+    fetchNewWord();
     setIsCorrect(false);
     setFinishGame(false);
     setCells(Array(30).fill({ letter: "", result: "" }));
     setIndexCell(0);
     setCurrentRow(0);
-    fetchNewWord();
   };
+
+  useEffect(() => {
+    if (isCorrect === true || currentRow > 5) {
+      return setFinishGame(true);
+    }
+
+    if (currentRow <= 5) setIndexCell(currentRow * 5);
+  }, [currentRow]);
 
   // Agregar el event listener al montar el componente
   useEffect(() => {
@@ -137,6 +149,7 @@ const Game = ({ setGame }: Props) => {
 
   useEffect(() => {
     const currentCells = document.querySelectorAll("li");
+
     const handleClickCell = (event: Event) => {
       const target = event.target as HTMLElement;
       if (target.dataset.index) {
