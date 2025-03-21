@@ -8,19 +8,20 @@ import {
 } from "@mui/material";
 import Cell from "./Cell";
 import { cellType } from "../types";
+import Confetti from "react-confetti";
 
 interface Props {
   finishGame: boolean;
   isCorrect: boolean;
   word: string;
   cells: cellType[];
-  handleGameMode: () => void;
+  handleMenu: () => void;
   handleResetWord: () => void;
-  indexCell: number | null;
+  indexCell: number;
 }
 
 const GameLayout = ({
-  handleGameMode,
+  handleMenu,
   handleResetWord,
   indexCell,
   finishGame,
@@ -29,76 +30,92 @@ const GameLayout = ({
   cells,
 }: Props) => {
   return (
-    <Container
-      maxWidth="sm"
-      sx={{
-        minHeight: "100vh",
-        display: "grid",
-        alignContent: "start",
-      }}
-    >
-      <Stack
-        direction={"column"}
+    <>
+      {isCorrect && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          numberOfPieces={200}
+          initialVelocityX={10}
+          tweenDuration={5000}
+        />
+      )}
+      <Container
+        maxWidth="sm"
         sx={{
-          height: "150px",
-          marginTop: "30px",
+          minHeight: "100vh",
           display: "grid",
-          placeItems: "center",
+          alignContent: "start",
         }}
       >
-        {finishGame ? (
-          <>
+        <Stack
+          direction={"column"}
+          sx={{
+            height: "150px",
+            marginTop: "30px",
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          {finishGame ? (
+            <>
+              <Typography
+                variant="h3"
+                component={"h1"}
+                sx={{ textAlign: "center", fontWeight: "bold" }}
+              >
+                {isCorrect ? "HAZ GANADO" : "PERDISTE"}
+              </Typography>
+              <Typography
+                variant="h6"
+                component={"h2"}
+                sx={{ textAlign: "center" }}
+              >
+                La palabra era: <b>{word}</b>
+              </Typography>
+              <Button
+                onClick={handleResetWord}
+                variant="contained"
+                sx={{ width: "190px" }}
+              >
+                Elegir otra palabra
+              </Button>
+            </>
+          ) : (
             <Typography
               variant="h3"
               component={"h1"}
               sx={{ textAlign: "center", fontWeight: "bold" }}
             >
-              {isCorrect ? "HAZ GANADO" : "PERDISTE"}
+              ADIVINA LA PALABRA
             </Typography>
-            <Typography
-              variant="h6"
-              component={"h2"}
-              sx={{ textAlign: "center" }}
-            >
-              La palabra era: <b>{word}</b>
-            </Typography>
-            <Button
-              onClick={handleResetWord}
-              variant="contained"
-              sx={{ width: "190px" }}
-            >
-              Elegir otra palabra
-            </Button>
-          </>
-        ) : (
-          <Typography
-            variant="h3"
-            component={"h1"}
-            sx={{ textAlign: "center", fontWeight: "bold" }}
+          )}
+        </Stack>
+        <Box marginY={4}>
+          <Grid2
+            container
+            component={"ul"}
+            spacing={1}
+            sx={{ maxWidth: "440px", margin: "auto", padding: "0" }}
           >
-            ADIVINA LA PALABRA
-          </Typography>
-        )}
-      </Stack>
-      <Box marginY={4}>
-        <Grid2
-          container
-          component={"ul"}
-          spacing={1}
-          sx={{ maxWidth: "440px", margin: "auto", padding: "0" }}
-        >
-          {cells.map((cell, index) => (
-            <Cell key={index} cell={cell} index={index} indexCell={index === indexCell} />
-          ))}
-        </Grid2>
-      </Box>
+            {cells.map((cell, index) => (
+              <Cell
+                key={index}
+                cell={cell}
+                index={index}
+                cellIsFocus={index === indexCell}
+              />
+            ))}
+          </Grid2>
+        </Box>
 
-      <Stack>
-        <Button variant="outlined" onClick={handleGameMode}>
-          Volver al menú
-        </Button>
-      </Stack>
-    </Container>
+        <Stack>
+          <Button variant="outlined" onClick={handleMenu}>
+            Volver al menú
+          </Button>
+        </Stack>
+      </Container>
+    </>
   );
 };
 

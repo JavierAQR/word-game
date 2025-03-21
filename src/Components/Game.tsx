@@ -19,47 +19,50 @@ const Game = ({ setGame }: Props) => {
   const [currentRow, setCurrentRow] = useState(0); //currentRow indica el indice de la fila actual, primera fila = indice 0
   const [isCorrect, setIsCorrect] = useState<boolean>(false);
   const [finishGame, setFinishGame] = useState(false);
-  const [indexCell, setIndexCell] = useState<number | null>(0);
 
   const arrayCurrentRow = cells.slice(currentRow * 5, (currentRow + 1) * 5); //Se obtiene la fila actual cortando desde el primer indice de la fila, hasta el primero de la siguiente.
   const lettersCurrentRow = arrayCurrentRow.map((item) => item.letter); //Se obtiene solo las letras de la fila actual
-  const firstEmptyIndex = lettersCurrentRow.indexOf(""); //Se obtiene la primera celda vacía de izq a der (la próxima a escribir)\
+  const [indexCell, setIndexCell] = useState<number>(0);
 
   const handleKeyDown = (event: KeyboardEvent) => {
     const key = event.key;
+    const firstIndexRow = currentRow * 5;
+    const lastIndexRow = (currentRow + 1) * 5 - 1;
     //Si es una letra
-    if (/^[a-zA-Z]$/.test(key)) {
+    if (/^[a-zA-Z]$/.test(key) && indexCell !== -1) {
       //Se obtiene el indice del primer elemento vacío en la fila actual
-      const focusCellIndex = currentRow * 5 + firstEmptyIndex;
-      if (firstEmptyIndex !== -1) {
+      if (indexCell <= lastIndexRow) {
         const newCells = [...cells];
-        newCells[focusCellIndex] = {
-          ...newCells[focusCellIndex],
+        newCells[indexCell] = {
+          ...newCells[indexCell],
           letter: key.toUpperCase(),
         };
-        return setCells(newCells);
+        setCells(newCells);
+      }
+
+      if (indexCell + 1 <= lastIndexRow) {
+        setIndexCell((prev) => prev + 1);
+      } else {
+        setIndexCell(-1);
       }
     }
 
     if (key === "Backspace") {
-      console.log(currentRow * 5 + firstEmptyIndex);
+      const newCells = [...cells];
 
-      // Si es la tecla de borrar
-      //Se obtiene el indice de la ultima celda vacía
-      const lastFilledIndex = lettersCurrentRow.indexOf("");
-      //Si la primera celda vacia no es la primera, es decir si hay por lo menos una letra agregada.
-      if (lastFilledIndex > 0) {
-        const newCells = [...cells]; //Se hace una copia actual de las celdas
-        newCells[currentRow * 5 + lastFilledIndex - 1].letter = ""; //En la fila actual, se obtiene el elemento anterior al primer elemento vacío encontrado
-        // (osea el ultimo elemento agregado), y se setea como ""
-        setCells(newCells); //Finalmente se guarda en el array original.
-
-        //Si no hay celdas vacías, es decir toda la fila está completa
-      } else if (lastFilledIndex === -1) {
-        const newCells = [...cells]; //Se hace copia del array
-        newCells[currentRow * 5 + 4].letter = ""; //Se obtiene el ultimo de los 5 elementos (0-4, en caso de ser la fila 0), y se setea como ""
-        return setCells(newCells); //Finalmente se guarda en el array original
+      if (indexCell === -1) {
+        setIndexCell(firstIndexRow + 4);
+        newCells[firstIndexRow + 4].letter = "";
+        return setCells(newCells);
       }
+
+      if (newCells[firstIndexRow + indexCell].letter !== "") {
+        newCells[indexCell].letter = "";
+      } else if (newCells[firstIndexRow + indexCell].letter === "") {
+        newCells[indexCell - 1].letter = "";
+      }
+      setIndexCell((prev) => prev - 1);
+      setCells(newCells);
     }
 
     // Si es la tecla de enviar
@@ -92,7 +95,7 @@ const Game = ({ setGame }: Props) => {
 
       const newCells = [...cells];
       for (let i = 0; i < 5; i++) {
-        const cellIndex = currentRow * 5 + i;
+        const cellIndex = firstIndexRow + i;
         newCells[cellIndex] = {
           ...newCells[cellIndex],
           result: newResult[i],
@@ -101,28 +104,39 @@ const Game = ({ setGame }: Props) => {
       setCells(newCells);
 
       if (newResult.every((item) => item === "correct")) setIsCorrect(true);
-      else if (currentRow < 5) return setCurrentRow(currentRow + 1);
-      return setFinishGame(true);
+      else if (currentRow < 5) {
+        setIndexCell((currentRow + 1) * 5);
+        return setCurrentRow(currentRow + 1);
+      }
+      setFinishGame(true);
     }
   };
 
-  const handleGameMode = () => {
+  const handleMenu = () => {
     setGame(null);
   };
 
   const handleResetWord = () => {
+    setIsCorrect(false);
     setFinishGame(false);
     setCells(Array(30).fill({ letter: "", result: "" }));
+    setIndexCell(0);
     setCurrentRow(0);
     fetchNewWord();
   };
 
+  // Agregar el event listener al montar el componente
+  useEffect(() => {
+    if (!finishGame) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [cells, currentRow, indexCell]);
+
   useEffect(() => {
     const currentCells = document.querySelectorAll("li");
-
-    // Obtener el indice y marcar indexCell
-    // Falta hacer que la celda seleccionada sea la proxima a cambiar
-    // Averiguar como se usa useRef, debe servir de algo.
     const handleClickCell = (event: Event) => {
       const target = event.target as HTMLElement;
       if (target.dataset.index) {
@@ -131,37 +145,26 @@ const Game = ({ setGame }: Props) => {
       }
     };
 
-    currentCells.forEach((cell, index) => {
-      if (index >= currentRow * 5 && index < (currentRow + 1) * 5) {
-        cell.addEventListener("click", handleClickCell);
-      }
-    });
+    if (!finishGame) {
+      currentCells.forEach((cell, index) => {
+        if (index >= currentRow * 5 && index < (currentRow + 1) * 5) {
+          cell.addEventListener("click", handleClickCell);
+        }
+      });
+    }
 
     return () => {
       currentCells.forEach((cell) => {
         cell.removeEventListener("click", handleClickCell);
       });
     };
-  }, [currentRow, indexCell]);
-
-  // Agregar el event listener al montar el componente
-  useEffect(() => {
-    if (firstEmptyIndex !== -1) {
-      setIndexCell(currentRow * 5 + firstEmptyIndex);
-    } else {
-      setIndexCell(null);
-    }
-    if (!finishGame) {
-      document.addEventListener("keydown", handleKeyDown);
-    }
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [cells, currentRow]);
+  }, [currentRow, finishGame]);
 
   useEffect(() => {
     handleResetWord();
   }, []);
+
+  console.log(targetWord);
 
   return (
     <GameLayout
@@ -169,7 +172,7 @@ const Game = ({ setGame }: Props) => {
       cells={cells}
       isCorrect={isCorrect}
       word={targetWord}
-      handleGameMode={handleGameMode}
+      handleMenu={handleMenu}
       handleResetWord={handleResetWord}
       indexCell={indexCell}
     />

@@ -4,10 +4,10 @@ import { cellType } from "../types";
 interface Props {
   cell: cellType;
   index: number;
-  indexCell: boolean;
+  cellIsFocus: boolean;
 }
 
-const Cell = ({ cell, indexCell, index }: Props) => {
+const Cell = ({ cell, cellIsFocus, index }: Props) => {
   const bgColor =
     cell.result === "correct"
       ? "green"
@@ -17,7 +17,7 @@ const Cell = ({ cell, indexCell, index }: Props) => {
       ? "gray"
       : "transparent";
 
-  const border = indexCell ? "3px solid white" : "2px solid #7f7f7f";
+  const border = cellIsFocus ? "3px solid white" : "2px solid #7f7f7f";
 
   return (
     <Grid2 size={2.4}>
