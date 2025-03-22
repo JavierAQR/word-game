@@ -1,14 +1,15 @@
-import { useState } from "react";
-import { gameType } from "../types";
 import { Button, Container, Stack, Typography } from "@mui/material";
 import Game from "../Components/Game";
+import Multiplayer from "./Multiplayer";
+import { useGameStore } from "../store/game";
 
 const Principal = () => {
-  const [game, setGame] = useState<gameType>(null);
+  const gamemode = useGameStore((state) => state.gamemode);
+  const setGamemode = useGameStore((state) => state.setGamemode);
 
   return (
     <>
-      {!game && (
+      {!gamemode && (
         <Container
           maxWidth="sm"
           sx={{ display: "grid", placeItems: "center", height: "100vh" }}
@@ -24,17 +25,22 @@ const Principal = () => {
             <Button
               variant="contained"
               sx={{ width: "200px" }}
-              onClick={() => setGame("1player")}
+              onClick={() => setGamemode("single")}
             >
               1 JUGADOR
             </Button>
-            <Button variant="contained" sx={{ width: "200px" }}>
+            <Button
+              variant="contained"
+              sx={{ width: "200px" }}
+              onClick={() => setGamemode("multi")}
+            >
               2 JUGADORES
             </Button>
           </Stack>
         </Container>
       )}
-      {game === "1player" && <Game setGame={setGame} />}
+      {gamemode === "single" && <Game />}
+      {gamemode === "multi" && <Multiplayer />}
     </>
   );
 };

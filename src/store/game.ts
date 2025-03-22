@@ -1,14 +1,21 @@
 import axios from "axios";
 import { create } from "zustand";
+import { gameType } from "../types";
 
-interface wordState {
+interface gameState {
   targetWord: string;
+  gamemode: gameType;
+  setGamemode: (mode: gameType) => void;
   fetchNewWord: () => void;
 }
 
-export const useWordStore = create<wordState>((set) => {
+export const useGameStore = create<gameState>((set) => {
   return {
     targetWord: "",
+    gamemode: null,
+    setGamemode: (mode: gameType) => {
+      set({ gamemode: mode });
+    },
     fetchNewWord: async () => {
       try {
         const response = await axios.get("src/data/words.json");

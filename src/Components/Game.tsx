@@ -1,34 +1,35 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import GameLayout from "./GameLayout";
-import { cellType, gameType } from "../types";
-import { useWordStore } from "../store/word";
+import { useEffect, useState } from "react";
+import { cellType, multiplayerType, playersType } from "../types";
+import { useGameStore } from "../store/game";
+import GameHeader from "./GameHeader";
+import { Container } from "@mui/material";
+import CellsLayout from "./CellsLayout";
+import GameFooter from "./GameFooter";
+import HeaderMultiplayer from "./HeaderMultiplayer";
 
 interface Props {
-  setGame: Dispatch<SetStateAction<gameType | null>>;
+  multiState?: multiplayerType;
+  handleRound: () => void;
+  handleScore: (player: string) => void;
+  players?: playersType;
 }
 
-const Game = ({ setGame }: Props) => {
-  const { targetWord, fetchNewWord } = useWordStore((state) => state);
-  const wordArray = targetWord.split("");
-
-  //cells es el array de elementos, en este caso son 5 columnas X 6 filas, y todas inician como strings vacíos
+const Game = ({ multiState, players, handleRound, handleScore }: Props) => {
   const [cells, setCells] = useState<cellType[]>(
     Array(30).fill({ letter: "", result: "" })
   );
-
+  const { targetWord, fetchNewWord } = useGameStore((state) => state);
   const [currentRow, setCurrentRow] = useState(0); //currentRow indica el indice de la fila actual, primera fila = indice 0
   const [isCorrect, setIsCorrect] = useState<boolean>(false);
-  const [finishGame, setFinishGame] = useState(false);
-
-  const arrayCurrentRow = cells.slice(currentRow * 5, (currentRow + 1) * 5); //Se obtiene la fila actual cortando desde el primer indice de la fila, hasta el primero de la siguiente.
-
-  const [indexCell, setIndexCell] = useState<number>(0);
+  const [isFinished, setIsFinished] = useState(false);
+  const [indexCell, setIndexCell] = useState<number>(0); //Celda seleccionada
 
   const handleKeyDown = (event: KeyboardEvent) => {
     const key = event.key;
     const firstIndexRow = currentRow * 5;
     const lastIndexRow = (currentRow + 1) * 5 - 1;
     const newCells = [...cells];
+    const arrayCurrentRow = newCells.slice(firstIndexRow, lastIndexRow + 1);
 
     if (/^[a-zA-Z]$/.test(key) && indexCell !== -1) {
       if (indexCell <= lastIndexRow) {
@@ -51,6 +52,7 @@ const Game = ({ setGame }: Props) => {
       if (indexCell === firstIndexRow && newCells[indexCell].letter === "") {
         return;
       }
+
       if (indexCell === -1) {
         setIndexCell(firstIndexRow + 4);
         newCells[firstIndexRow + 4].letter = "";
@@ -64,7 +66,8 @@ const Game = ({ setGame }: Props) => {
         newCells[indexCell - 1].letter = "";
       }
 
-      setIndexCell((prev) => prev - 1);
+      if (indexCell !== firstIndexRow) setIndexCell((prev) => prev - 1);
+
       setCells(newCells);
     }
 
@@ -75,11 +78,11 @@ const Game = ({ setGame }: Props) => {
       arrayCurrentRow.every((cell) => cell.letter !== "") &&
       currentRow <= 5
     ) {
-      const wordControl = [...wordArray];
+      const wordControl = targetWord.split("");
 
       arrayCurrentRow.forEach((item, index) => {
         const cellIndex = firstIndexRow + index;
-        if (item.letter === wordArray[index]) {
+        if (item.letter === targetWord[index]) {
           newCells[cellIndex] = {
             ...newCells[cellIndex],
             result: "correct",
@@ -95,19 +98,18 @@ const Game = ({ setGame }: Props) => {
       } else {
         arrayCurrentRow.forEach((item, index) => {
           const cellIndex = firstIndexRow + index;
+          let result = "absend";
+
           if (newCells[cellIndex].result === "correct") {
             return;
           }
           if (wordControl.includes(item.letter)) {
-            newCells[cellIndex] = {
-              ...newCells[cellIndex],
-              result: "present",
-            };
-            return wordControl.splice(wordControl.indexOf(item.letter), 1);
+            result = "present";
+            wordControl.splice(wordControl.indexOf(item.letter), 1);
           }
           newCells[cellIndex] = {
             ...newCells[cellIndex],
-            result: "absend",
+            result: result,
           };
         });
       }
@@ -116,36 +118,36 @@ const Game = ({ setGame }: Props) => {
     }
   };
 
-  const handleMenu = () => {
-    setGame(null);
-  };
-
   const handleResetWord = () => {
     fetchNewWord();
     setIsCorrect(false);
-    setFinishGame(false);
-    setCells(Array(30).fill({ letter: "", result: "" }));
-    setIndexCell(0);
+    setIsFinished(false);
     setCurrentRow(0);
+    setCells(Array(30).fill({ letter: "", result: "" }));
   };
 
   useEffect(() => {
-    if (isCorrect === true || currentRow > 5) {
-      return setFinishGame(true);
-    }
+    fetchNewWord();
+  }, []);
 
-    if (currentRow <= 5) setIndexCell(currentRow * 5);
-  }, [currentRow]);
-
-  // Agregar el event listener al montar el componente
   useEffect(() => {
-    if (!finishGame) {
+    if (isCorrect === true || currentRow > 5) {
+      if (isCorrect && multiState) {
+        handleScore(multiState.currentPlayer);
+      }
+      return setIsFinished(true);
+    }
+    setIndexCell(currentRow * 5);
+  }, [currentRow, multiState]);
+
+  useEffect(() => {
+    if (!isFinished) {
       document.addEventListener("keydown", handleKeyDown);
     }
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [cells, currentRow, indexCell]);
+  }, [indexCell, isFinished]);
 
   useEffect(() => {
     const currentCells = document.querySelectorAll("li");
@@ -158,10 +160,11 @@ const Game = ({ setGame }: Props) => {
       }
     };
 
-    if (!finishGame) {
+    if (!isFinished) {
       currentCells.forEach((cell, index) => {
         if (index >= currentRow * 5 && index < (currentRow + 1) * 5) {
           cell.addEventListener("click", handleClickCell);
+          cell.style.cursor = "pointer";
         }
       });
     }
@@ -171,24 +174,38 @@ const Game = ({ setGame }: Props) => {
         cell.removeEventListener("click", handleClickCell);
       });
     };
-  }, [currentRow, finishGame]);
-
-  useEffect(() => {
-    handleResetWord();
-  }, []);
+  }, [currentRow, isFinished]);
 
   console.log(targetWord);
 
   return (
-    <GameLayout
-      finishGame={finishGame}
-      cells={cells}
-      isCorrect={isCorrect}
-      word={targetWord}
-      handleMenu={handleMenu}
-      handleResetWord={handleResetWord}
-      indexCell={indexCell}
-    />
+    <Container
+      maxWidth="sm"
+      sx={{
+        height: "100vh",
+        alignContent: "start",
+      }}
+    >
+      {multiState && players ? (
+        <HeaderMultiplayer
+          isFinished={isFinished}
+          isCorrect={isCorrect}
+          handleRound={handleRound}
+          handleReset={handleResetWord}
+          multiState={multiState}
+          players={players}
+        />
+      ) : (
+        <GameHeader
+          handleResetWord={handleResetWord}
+          isCorrect={isCorrect}
+          isFinished={isFinished}
+        />
+      )}
+
+      <CellsLayout cells={cells} indexCell={indexCell} />
+      <GameFooter />
+    </Container>
   );
 };
 
