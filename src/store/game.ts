@@ -16,7 +16,7 @@ export const useGameStore = create<gameState>((set) => {
 
     fetchNewWord: async () => {
       try {
-        const response = await axios.get("./src/data/words.json");
+        const response = await axios.get("/words.json");
         const words = response.data;
         const randomWord = words[Math.floor(Math.random() * words.length)];
         set({ targetWord: randomWord });
