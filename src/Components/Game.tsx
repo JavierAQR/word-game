@@ -1,28 +1,24 @@
-import { useEffect, useState } from "react";
-import { cellType, multiplayerType, playersType } from "../types";
+import { useEffect } from "react";
 import { useGameStore } from "../store/game";
-import GameHeader from "./GameHeader";
-import { Container } from "@mui/material";
+
 import CellsLayout from "./CellsLayout";
 import GameFooter from "./GameFooter";
-import HeaderMultiplayer from "./HeaderMultiplayer";
+import { useGameContext } from "../context/GameContext";
+import { useCellsContext } from "../context/CellContext";
 
-interface Props {
-  multiState?: multiplayerType;
-  handleRound: () => void;
-  handleScore: (player: string) => void;
-  players?: playersType;
-}
+const Game = () => {
+  const { isCorrect, isFinished, setIsCorrect, setIsFinished } =
+    useGameContext();
 
-const Game = ({ multiState, players, handleRound, handleScore }: Props) => {
-  const [cells, setCells] = useState<cellType[]>(
-    Array(30).fill({ letter: "", result: "" })
-  );
+  const {
+    cells,
+    currentRow,
+    setCells,
+    setCurrentRow,
+    setIndexCell,
+    indexCell,
+  } = useCellsContext();
   const { targetWord, fetchNewWord } = useGameStore((state) => state);
-  const [currentRow, setCurrentRow] = useState(0); //currentRow indica el indice de la fila actual, primera fila = indice 0
-  const [isCorrect, setIsCorrect] = useState<boolean>(false);
-  const [isFinished, setIsFinished] = useState(false);
-  const [indexCell, setIndexCell] = useState<number>(0); //Celda seleccionada
 
   const handleKeyDown = (event: KeyboardEvent) => {
     const key = event.key;
@@ -118,27 +114,18 @@ const Game = ({ multiState, players, handleRound, handleScore }: Props) => {
     }
   };
 
-  const handleResetWord = () => {
-    fetchNewWord();
-    setIsCorrect(false);
-    setIsFinished(false);
-    setCurrentRow(0);
-    setCells(Array(30).fill({ letter: "", result: "" }));
-  };
-
   useEffect(() => {
-    fetchNewWord();
-  }, []);
+    if (!isFinished) {
+      fetchNewWord();
+    }
+  }, [isFinished]);
 
   useEffect(() => {
     if (isCorrect === true || currentRow > 5) {
-      if (isCorrect && multiState) {
-        handleScore(multiState.currentPlayer);
-      }
       return setIsFinished(true);
     }
     setIndexCell(currentRow * 5);
-  }, [currentRow, multiState]);
+  }, [currentRow]);
 
   useEffect(() => {
     if (!isFinished) {
@@ -179,33 +166,10 @@ const Game = ({ multiState, players, handleRound, handleScore }: Props) => {
   console.log(targetWord);
 
   return (
-    <Container
-      maxWidth="sm"
-      sx={{
-        height: "100vh",
-        alignContent: "start",
-      }}
-    >
-      {multiState && players ? (
-        <HeaderMultiplayer
-          isFinished={isFinished}
-          isCorrect={isCorrect}
-          handleRound={handleRound}
-          handleReset={handleResetWord}
-          multiState={multiState}
-          players={players}
-        />
-      ) : (
-        <GameHeader
-          handleResetWord={handleResetWord}
-          isCorrect={isCorrect}
-          isFinished={isFinished}
-        />
-      )}
-
-      <CellsLayout cells={cells} indexCell={indexCell} />
+    <>
+      <CellsLayout />
       <GameFooter />
-    </Container>
+    </>
   );
 };
 

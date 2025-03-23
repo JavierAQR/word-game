@@ -1,13 +1,16 @@
-import { Button, Container, Stack, TextField, Typography } from "@mui/material";
+import { Button, Stack, TextField, Typography } from "@mui/material";
 import { FormEvent, useEffect, useState } from "react";
 import { multiplayerType, playersInitial, playersType } from "../types";
 import Game from "../Components/Game";
 import MenuButton from "../Components/MenuButton";
+import HeaderMultiplayer from "../Components/HeaderMultiplayer";
+import { useGameContext } from "../context/GameContext";
 
 const Multiplayer = () => {
   const [input1, setInput1] = useState("");
   const [input2, setInput2] = useState("");
   const [players, setPlayers] = useState<playersType>(playersInitial);
+  const { isCorrect } = useGameContext();
   const [isGameReady, setIsGameReady] = useState(false);
   const [multiState, setMultiState] = useState<multiplayerType>({
     currentPlayer: "player1",
@@ -52,7 +55,6 @@ const Multiplayer = () => {
     if (!multiState) {
       return;
     }
-
     if (multiState.turn % 2 === 0) {
       setMultiState({
         ...multiState,
@@ -66,10 +68,16 @@ const Multiplayer = () => {
     }
   }, [multiState?.turn]);
 
+  useEffect(() => {
+    if (isCorrect) {
+      handleScore(multiState.currentPlayer);
+    }
+  }, [multiState, isCorrect]);
+
   return (
     <>
       {!isGameReady ? (
-        <Container maxWidth="sm" sx={{ display: "grid", height: "100vh" }}>
+        <>
           <Stack
             direction={"column"}
             spacing={15}
@@ -111,14 +119,16 @@ const Multiplayer = () => {
             </Stack>
             <MenuButton />
           </Stack>
-        </Container>
+        </>
       ) : (
-        <Game
-          multiState={multiState}
-          handleRound={handleRound}
-          handleScore={handleScore}
-          players={players}
-        />
+        <>
+          <HeaderMultiplayer
+            handleRound={handleRound}
+            multiState={multiState}
+            players={players}
+          />
+          <Game />
+        </>
       )}
     </>
   );

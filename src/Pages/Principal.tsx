@@ -1,15 +1,15 @@
 import { Button, Container, Stack, Typography } from "@mui/material";
-import Game from "../Components/Game";
 import Multiplayer from "./Multiplayer";
-import { useGameStore } from "../store/game";
+
+import SinglePlayer from "./SinglePlayer";
+import { useGameContext } from "../context/GameContext";
 
 const Principal = () => {
-  const gamemode = useGameStore((state) => state.gamemode);
-  const setGamemode = useGameStore((state) => state.setGamemode);
+  const { gamemode, setGamemode } = useGameContext();
 
   return (
     <>
-      {!gamemode && (
+      {!gamemode ? (
         <Container
           maxWidth="sm"
           sx={{ display: "grid", placeItems: "center", height: "100vh" }}
@@ -38,9 +38,19 @@ const Principal = () => {
             </Button>
           </Stack>
         </Container>
+      ) : (
+        <Container
+          maxWidth="sm"
+          sx={{
+            height: "100vh",
+            placeContent: "center",
+            /* alignContent: "start", */
+          }}
+        >
+          {gamemode === "single" && <SinglePlayer />}
+          {gamemode === "multi" && <Multiplayer />}
+        </Container>
       )}
-      {gamemode === "single" && <Game />}
-      {gamemode === "multi" && <Multiplayer />}
     </>
   );
 };

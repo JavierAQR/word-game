@@ -1,57 +1,67 @@
 import { Button, Stack, Typography } from "@mui/material";
 import { useGameStore } from "../store/game";
-import ReactConfetti from "react-confetti";
+import { useGameContext } from "../context/GameContext";
+import { useCellsContext } from "../context/CellContext";
+import { ReactNode } from "react";
 
 interface Props {
-  handleResetWord?: () => void;
-  isCorrect: boolean;
-  isFinished: boolean;
+  msgWin: string;
+  msgLoose: string;
+  msgButton: string;
+  height: number;
+  functionExtra?: () => void;
+  children?: ReactNode;
 }
 
-const GameHeader = ({ handleResetWord, isFinished, isCorrect }: Props) => {
+const GameHeader = ({
+  msgButton,
+  msgWin,
+  msgLoose,
+  children,
+  height,
+  functionExtra,
+}: Props) => {
   const targetWord = useGameStore((state) => state.targetWord);
+  const { isCorrect, isFinished, handleResetGame } = useGameContext();
+  const { resetCells } = useCellsContext();
 
   return (
     <>
-      {isCorrect && (
-        <ReactConfetti
-          width={window.innerWidth}
-          height={window.innerHeight}
-          numberOfPieces={200}
-          initialVelocityX={2}
-          initialVelocityY={0}
-        />
-      )}
       <Stack
         direction={"column"}
+        spacing={1}
         sx={{
-          height: "150px",
-          marginTop: "30px",
+          height: `${height}px`,
           display: "grid",
           placeItems: "center",
         }}
       >
-        {isFinished ? (
+        {!isFinished ? (
+          <Typography variant="h3" component={"h1"} fontWeight={"bold"}>
+            ADIVINA LA PALABRA
+          </Typography>
+        ) : (
           <>
             <Typography variant="h3" component={"h1"} fontWeight={"bold"}>
-              {isCorrect ? "HAZ GANADO" : "PERDISTE"}
+              {isCorrect ? msgWin : msgLoose}
             </Typography>
             <Typography variant="h6" component={"h2"}>
               La palabra era: <b>{targetWord}</b>
             </Typography>
             <Button
-              onClick={handleResetWord}
+              onClick={() => {
+                functionExtra && functionExtra();
+                handleResetGame();
+                resetCells();
+              }}
               variant="contained"
               sx={{ width: "190px" }}
             >
-              Elegir otra palabra
+              {msgButton}
             </Button>
           </>
-        ) : (
-          <Typography variant="h3" component={"h1"} fontWeight={"bold"}>
-            ADIVINA LA PALABRA
-          </Typography>
         )}
+        {children}
       </Stack>
     </>
   );

@@ -1,66 +1,40 @@
-import { Button, Stack, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { multiplayerType, playersType } from "../types";
+import GameHeader from "./GameHeader";
 
 interface Props {
   multiState: multiplayerType;
   handleRound: () => void;
-  handleReset: () => void;
   players: playersType;
-  isFinished: boolean;
-  isCorrect: boolean;
 }
 
-const HeaderMultiplayer = ({
-  multiState,
-  players,
-  isFinished,
-  isCorrect,
-  handleRound,
-  handleReset,
-}: Props) => {
+const HeaderMultiplayer = ({ multiState, players, handleRound }: Props) => {
   return (
-    <Stack
-      direction={"column"}
-      spacing={3}
-      sx={{
-        minHeight: "240px",
-        marginTop: "30px",
-        placeItems: "center",
-      }}
-    >
-      {!isFinished ? (
-        <Typography variant="h3" component={"h1"} fontWeight={"bold"}>
-          ADIVINA LA PALABRA
-        </Typography>
-      ) : (
-        <>
-          <Typography variant="h3" component={"h1"} fontWeight={"bold"}>
-            {isCorrect ? "ACERTASTE +100" : "FALLASTE +0"}
-          </Typography>
-        </>
-      )}
-      <Typography variant="h4" component={"h1"} fontWeight={"bold"}>
-        {`Ronda ${multiState.turn}: Turno de ${
+    <>
+      <Typography
+        variant="h5"
+        component={"h1"}
+        fontWeight={"bold"}
+        textAlign={"center"}
+        marginBottom={3}
+      >
+        {`Ronda (${multiState.turn}/8): Turno de ${
           players[multiState.currentPlayer].name
         }`}
       </Typography>
-      <Typography variant="h5">
-        {`${players.player1.name}: ${players.player1.score} ptos  - `}
-        {`${players.player2.name}: ${players.player2.score} ptos`}
-      </Typography>
-      {isFinished && (
-        <Button
-          onClick={() => {
-            handleRound();
-            handleReset();
-          }}
-          variant="contained"
-          sx={{ width: "190px" }}
-        >
-          Siguiente ronda
-        </Button>
-      )}
-    </Stack>
+      <GameHeader
+        height={240}
+        msgWin="ACERTASTE"
+        msgLoose="FALLASTE"
+        msgButton="Siguiente turno"
+        functionExtra={handleRound}
+      >
+        <Typography variant="h6">
+          {`${players.player1.name}: ${players.player1.score} ptos  - `}
+          {`${players.player2.name}: ${players.player2.score} ptos`}
+        </Typography>
+      </GameHeader>
+    </>
   );
 };
 

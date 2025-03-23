@@ -1,13 +1,11 @@
 import { Box, Grid2 } from "@mui/material";
 import Cell from "./Cell";
-import { cellType } from "../types";
 
-interface Props {
-  cells: cellType[];
-  indexCell: number;
-}
+import { useCellsContext } from "../context/CellContext";
 
-const CellsLayout = ({ indexCell, cells }: Props) => {
+const CellsLayout = () => {
+  const { cells, indexCell } = useCellsContext();
+
   return (
     <>
       <Box marginY={4}>

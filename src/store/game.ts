@@ -5,7 +5,7 @@ import { gameType } from "../types";
 interface gameState {
   targetWord: string;
   gamemode: gameType;
-  setGamemode: (mode: gameType) => void;
+  
   fetchNewWord: () => void;
 }
 
@@ -13,9 +13,7 @@ export const useGameStore = create<gameState>((set) => {
   return {
     targetWord: "",
     gamemode: null,
-    setGamemode: (mode: gameType) => {
-      set({ gamemode: mode });
-    },
+   
     fetchNewWord: async () => {
       try {
         const response = await axios.get("src/data/words.json");
