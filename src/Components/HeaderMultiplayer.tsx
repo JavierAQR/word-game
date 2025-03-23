@@ -23,7 +23,7 @@ const HeaderMultiplayer = ({ multiState, players, handleRound }: Props) => {
         }`}
       </Typography>
       <GameHeader
-        height={240}
+        height={200}
         msgWin="ACERTASTE"
         msgLoose="FALLASTE"
         msgButton="Siguiente turno"

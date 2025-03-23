@@ -3,15 +3,16 @@ import { FormEvent, useEffect, useState } from "react";
 import { multiplayerType, playersInitial, playersType } from "../types";
 import Game from "../Components/Game";
 import MenuButton from "../Components/MenuButton";
-import HeaderMultiplayer from "../Components/HeaderMultiplayer";
 import { useGameContext } from "../context/GameContext";
+import HeaderMultiplayer from "../Components/HeaderMultiplayer";
+import WinnerPlayer from "../Components/WinnerPlayer";
 
 const Multiplayer = () => {
   const [input1, setInput1] = useState("");
   const [input2, setInput2] = useState("");
   const [players, setPlayers] = useState<playersType>(playersInitial);
   const { isCorrect } = useGameContext();
-  const [isGameReady, setIsGameReady] = useState(false);
+  const [isInGame, setIsInGame] = useState<boolean | "menu">("menu");
   const [multiState, setMultiState] = useState<multiplayerType>({
     currentPlayer: "player1",
     turn: 0,
@@ -27,7 +28,15 @@ const Multiplayer = () => {
       currentPlayer: "player1",
       turn: 1,
     });
-    setIsGameReady(true);
+    setIsInGame(true);
+  };
+
+  const handleWinner = () => {
+    if (players.player1.score > players.player2.score) {
+      return players.player1.name;
+    } else if (players.player2.score > players.player1.score) {
+      return players.player2.name;
+    }
   };
 
   const handleRound = () => {
@@ -35,6 +44,10 @@ const Multiplayer = () => {
       ...multiState,
       turn: prev.turn + 1,
     }));
+
+    if (multiState.turn === 8) {
+      setIsInGame(false);
+    }
   };
 
   const handleScore = (player: string) => {
@@ -76,7 +89,7 @@ const Multiplayer = () => {
 
   return (
     <>
-      {!isGameReady ? (
+      {isInGame === "menu" && (
         <>
           <Stack
             direction={"column"}
@@ -120,7 +133,8 @@ const Multiplayer = () => {
             <MenuButton />
           </Stack>
         </>
-      ) : (
+      )}
+      {isInGame === true && (
         <>
           <HeaderMultiplayer
             handleRound={handleRound}
@@ -130,6 +144,7 @@ const Multiplayer = () => {
           <Game />
         </>
       )}
+      {isInGame === false && <WinnerPlayer handleWinner={handleWinner} />}
     </>
   );
 };
