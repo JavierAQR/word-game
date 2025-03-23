@@ -163,8 +163,6 @@ const Game = () => {
     };
   }, [currentRow, isFinished]);
 
-  console.log(targetWord);
-
   return (
     <>
       <CellsLayout />
